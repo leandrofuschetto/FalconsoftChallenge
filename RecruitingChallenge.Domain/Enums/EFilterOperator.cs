@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 
 namespace RecruitingChallenge.Domain.Enums
 {
-    public enum SortOrientation
+    public enum EFilterOperator
     {
-        Asc,
-        Desc
+        Equal,
+        LessThan,
+        LessThanOrEqual,
+        GraterThanOrEqual,
+        GraterThan
     }
 }

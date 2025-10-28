@@ -12,7 +12,7 @@ namespace RecruitingChallenge.DAL.Entities
         public int Id { get; set; }
         public DateTime EntryDate { get; set; }
         public decimal TotalAmount { get; set; }
-        public OrderStatus Status { get; set; }
+        public EOrderStatus Status { get; set; }
         public Guid ClientId { get; set; }
 
         public ClientEntity Client { get; set; }

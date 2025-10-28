@@ -5,16 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecruitingChallenge.Service.Models
+namespace RecruitingChallenge.DAL.Filters
 {
-    public class GetOrdersPagedModel
+    public class Filter
     {
-        public EOrderSort SortBy { get; set; }
         public ESortOrientation Orientation { get; set; }
         public EFilterOperator FilterOperator { get; set; }
         public string FilterValue { get; set; }
-
-        public int? LastCursorId { get; set; }
-        public string LastCursorValue { get; set; }
     }
 }

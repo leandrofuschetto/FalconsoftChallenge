@@ -28,7 +28,7 @@ namespace RecruitingChallenge.DAL.Configurations
 
             builder.Property(o => o.Status)
                 .IsRequired()
-                .HasDefaultValue(OrderStatus.Pending);
+                .HasDefaultValue(EOrderStatus.Pending);
 
             builder.HasOne(o => o.Client)
                  .WithMany(u => u.Orders)

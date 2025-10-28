@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace RecruitingChallenge.Domain.Enums
 {
-    public enum OrderSort
+    public enum EOrderSort
     {
+        Id,
         EntryDate,
         ClientId,
-        Amount,
+        TotalAmount,
         Status
     }
 }

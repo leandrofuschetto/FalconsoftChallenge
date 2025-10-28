@@ -13,12 +13,12 @@ namespace RecruitingChallenge.Domain.Models
         public DateTime EntryDate { get; set; }
         public Client Client { get; set; }
         public decimal TotalAmount { get; set; }
-        public OrderStatus Status { get; set; }
+        public EOrderStatus Status { get; set; }
         public IEnumerable<OrderItem> OrderItems { get; set; } 
 
         public decimal CalculateTotalAmount() => OrderItems.Sum(item => item.Subtotal);
-        public bool IsOrderComplete() => Status == OrderStatus.Completed || Status == OrderStatus.Delivered;
-        public bool IsOrderPending() => Status == OrderStatus.Pending || Status == OrderStatus.Processing;
-        public bool isOrderCancelled() => Status == OrderStatus.Cancelled;
+        public bool IsOrderComplete() => Status == EOrderStatus.Completed || Status == EOrderStatus.Delivered;
+        public bool IsOrderPending() => Status == EOrderStatus.Pending || Status == EOrderStatus.Processing;
+        public bool isOrderCancelled() => Status == EOrderStatus.Cancelled;
     }
 }

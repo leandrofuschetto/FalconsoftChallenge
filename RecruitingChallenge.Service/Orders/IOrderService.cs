@@ -8,6 +8,6 @@ namespace RecruitingChallenge.Service.Orders
     {
         Task<PagedResult<Domain.Models.Order>> GetAllOrders(GetOrdersPagedModel model);
         Task<Domain.Models.Order> GetOrderById(int id);
-        Task UpdateOrderStatus(int id, OrderStatus status);
+        Task UpdateOrderStatus(int id, EOrderStatus status);
     }
 }

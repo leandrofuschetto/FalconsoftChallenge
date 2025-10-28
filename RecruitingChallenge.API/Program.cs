@@ -10,6 +10,7 @@ using RecruitingChallenge.DAL.Repositories.User;
 using RecruitingChallenge.Mapper;
 using RecruitingChallenge.Service.Orders;
 using RecruitingChallenge.Service.Users;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +40,11 @@ var config = new MapperConfiguration(cfg =>
 
 var mapper = config.CreateMapper();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    }); ;
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

@@ -24,6 +24,8 @@ namespace RecruitingChallenge.API.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResult<GetOrderResponse>>> GetOrders([FromQuery] GetOrderFilterRequest request)
         {
+            request.ValidateAndNormalize();
+
             var orders = await _orderService.GetAllOrders(request.ToServiceModel());
 
             var listOrdersResponse = new List<GetOrderResponse>();

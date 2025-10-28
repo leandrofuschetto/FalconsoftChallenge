@@ -1,5 +1,5 @@
 ﻿using RecruitingChallenge.Common.Models;
-using RecruitingChallenge.DAL.Repositories.Filters;
+using RecruitingChallenge.DAL.Filters;
 
 namespace RecruitingChallenge.DAL.Repositories.Order
 {
@@ -7,6 +7,6 @@ namespace RecruitingChallenge.DAL.Repositories.Order
     {
         Task<PagedResult<Domain.Models.Order>> GetPagedOrders(OrderFilters filters);
         Task<Domain.Models.Order> GetOrderById(int orderId);
-        Task UpdateOrderStatus(int orderId, Domain.Enums.OrderStatus status);
+        Task UpdateOrderStatus(int orderId, Domain.Enums.EOrderStatus status);
     }
 }

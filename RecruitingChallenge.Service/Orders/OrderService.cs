@@ -1,5 +1,5 @@
 ﻿using RecruitingChallenge.Common.Models;
-using RecruitingChallenge.DAL.Repositories.Filters;
+using RecruitingChallenge.DAL.Filters;
 using RecruitingChallenge.DAL.Repositories.Order;
 using RecruitingChallenge.Domain.Enums;
 using RecruitingChallenge.Domain.Models;
@@ -22,9 +22,10 @@ namespace RecruitingChallenge.Service.Orders
             {
                 Orientation = model.Orientation,
                 SortBy = model.SortBy,
-                Status = model.Status,
                 LastCursorId = model.LastCursorId,
-                LastCursorValue = model.LastCursorValue
+                LastCursorValue = model.LastCursorValue,
+                FilterOperator = model.FilterOperator,
+                FilterValue = model.FilterValue
             };
 
             var orders = _orderRepository.GetPagedOrders(orderFilters);
@@ -42,7 +43,7 @@ namespace RecruitingChallenge.Service.Orders
             return order;
         }
 
-        public async Task UpdateOrderStatus(int id, OrderStatus status)
+        public async Task UpdateOrderStatus(int id, EOrderStatus status)
         {
             if (id == 0)
                 throw new ArgumentException("Id should have a valid value", nameof(id));

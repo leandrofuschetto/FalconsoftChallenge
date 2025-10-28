@@ -1,6 +1,6 @@
 ﻿namespace RecruitingChallenge.Domain.Enums
 {
-    public enum OrderStatus
+    public enum EOrderStatus
     {
         Pending,
         Processing,

@@ -6,7 +6,7 @@ namespace RecruitingChallenge.API.DTOs.Order
 {
     public class UpdateOrderRequest
     {
-        [JsonConverter(typeof(JsonStringEnumConverter<OrderStatus>))]
-        public OrderStatus NewStatus { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<EOrderStatus>))]
+        public EOrderStatus NewStatus { get; set; }
     }
 }
