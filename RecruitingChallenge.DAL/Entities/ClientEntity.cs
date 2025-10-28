@@ -1,0 +1,26 @@
+﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using RecruitingChallenge.DAL.Repositories.Order;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RecruitingChallenge.DAL.Entities
+{
+    public class ClientEntity
+    {
+        public Guid Id { get; set; }
+        public DateTime EntryDate { get; set; }
+        public string Name { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+
+        public ICollection<OrderEntity> Orders { get; set; }
+
+        public ClientEntity()
+        {
+            Orders = new List<OrderEntity>();
+        }
+    }
+}
