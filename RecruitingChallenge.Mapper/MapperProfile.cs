@@ -8,7 +8,6 @@ namespace RecruitingChallenge.Mapper
     {
         public  MapperProfile()
         {
-            CreateMap<User, UserEntity>();
             CreateMap<UserEntity, User>();
 
             CreateMap<OrderEntity, Order>()
@@ -17,8 +16,6 @@ namespace RecruitingChallenge.Mapper
 
             CreateMap<Order, OrderEntity>()
                 .ForMember(d => d.Client, op => op.MapFrom(src => src.Client));
-
-            CreateMap<OrderItem, OrderItemEntity>();
 
             CreateMap<OrderItemEntity, OrderItem>()
                 .ForMember(d => d.ProductName, op => op.MapFrom(src => src.Product.Name))
