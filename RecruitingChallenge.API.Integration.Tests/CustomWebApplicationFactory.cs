@@ -33,8 +33,12 @@ namespace RecruitingChallenge.API.Integration.Tests
                 var db = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
                 db.Database.EnsureCreated();
 
-                SeedTestData(db);
-            });
+                // Only seed the user once during application startup
+                if (!db.Users.Any())
+                {
+                    SeedTestData(db);
+                }
+                });
         }
 
         protected async Task AddToDateBase<TEntity>(TEntity entity) where TEntity : class
@@ -42,7 +46,25 @@ namespace RecruitingChallenge.API.Integration.Tests
             using var scope = Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
 
+            // Ensure database is created
+            await context.Database.EnsureCreatedAsync();
+
             await context.Set<TEntity>().AddAsync(entity);
+            await context.SaveChangesAsync();
+        }
+
+        protected async Task AddMultipleToDatabase(params object[] entities)
+        {
+            using var scope = Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
+
+            // Ensure database is created
+            await context.Database.EnsureCreatedAsync();
+
+            foreach (var entity in entities)
+            {
+                await context.AddAsync(entity);
+            }
 
             await context.SaveChangesAsync();
         }

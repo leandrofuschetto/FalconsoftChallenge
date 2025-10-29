@@ -32,13 +32,15 @@ namespace RecruitingChallenge.API.Integration.Tests
             var clientEntity = new TestsClientEntityBuilder()
                 .WithEmail("email@gmail.com")
                 .WithId(clientId)
+                .WithFirstName("name")
+                .WithLastname("lastname")
                 .Build();
 
             var productEntity = new TestProductEntityBuilder()
                 .WithId(Guid.NewGuid())
                 .WithUnitPrice(1.05m)
                 .WithDescription("Product A")
-                .WithEntryDate(new DateTime(2025 - 09 - 09))
+                .WithEntryDate(new DateTime(2025, 09, 09))
                 .WithName("Product A")
                 .Build();
 
@@ -56,7 +58,8 @@ namespace RecruitingChallenge.API.Integration.Tests
                 .WithTotalAmount(10)
                 .Build();
 
-            await AddToDateBase(orderEntity);
+            // Add all related entities at once to avoid dependency issues
+            await AddMultipleToDatabase(clientEntity, productEntity, orderItemEntity, orderEntity);
 
             var httpClient = await AuthenticateAsync();
 
