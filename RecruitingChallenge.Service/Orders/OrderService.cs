@@ -4,6 +4,7 @@ using RecruitingChallenge.DAL.Repositories.Order;
 using RecruitingChallenge.Domain.Enums;
 using RecruitingChallenge.Domain.Models;
 using RecruitingChallenge.Service.Models;
+using RecruitingChallenge.Domain.Exceptions;
 
 namespace RecruitingChallenge.Service.Orders
 {
@@ -37,9 +38,8 @@ namespace RecruitingChallenge.Service.Orders
 
         public async Task<Order> GetOrderById(int id)
         {
-            if (id == 0)
-                throw new ArgumentException("Id should have a valid value", nameof(id));
-
+            ValidateOrderIdEntry(id);
+            
             var order = await _orderRepository.GetOrderById(id);
 
             return order;
@@ -51,6 +51,38 @@ namespace RecruitingChallenge.Service.Orders
                 throw new ArgumentException("Id should have a valid value", nameof(id));
 
             await _orderRepository.UpdateOrderStatus(id, status);
+        }
+
+		public async Task UpdateQuantityInOrderItem(int orderId, Guid itemId, int quantity)
+		{
+            ValidateOrderIdEntry(orderId);
+
+            if (itemId == Guid.Empty)
+				throw new ArgumentException("ItemId should have a valid value", nameof(itemId));
+
+			if (quantity <= 0)
+				throw new ArgumentException("Quantity must be greater than zero", nameof(quantity));
+
+			var order = await _orderRepository.GetOrderById(orderId);
+
+			if (order == null)
+				throw new OrderNotFoundException("Order not found");
+
+			if (order.Status != EOrderStatus.Pending)
+				throw new OrderCannotBeModifiedException("Only orders in Pending status can be edited");
+
+			var item = order.OrderItems?.FirstOrDefault(i => i.Id == itemId);
+
+			if (item == null)
+				throw new OrderItemNotFoundException("Order item not found in the specified order");
+
+			await _orderRepository.UpdateOrderItemQuantity(orderId, itemId, quantity);
+		}
+
+        private void ValidateOrderIdEntry(int id)
+        {
+            if (id == 0)
+                throw new ArgumentException("Id should have a valid value", nameof(id));
         }
     }
 }

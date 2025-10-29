@@ -55,5 +55,13 @@ namespace RecruitingChallenge.API.Controllers
 
             return NoContent();
         }
+
+		[HttpPatch("{id}/orderItems/{itemId}")]
+		public async Task<IActionResult> UpdateOrderItemQuantity(int id, Guid itemId, [FromBody] UpdateOrderItemQuantityRequest dto)
+		{
+			await _orderService.UpdateQuantityInOrderItem(id, itemId, dto.Quantity);
+
+			return NoContent();
+		}
     }
 }

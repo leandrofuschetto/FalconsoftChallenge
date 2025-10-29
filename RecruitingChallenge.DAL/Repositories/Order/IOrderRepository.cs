@@ -8,5 +8,6 @@ namespace RecruitingChallenge.DAL.Repositories.Order
         Task<PagedResult<Domain.Models.Order>> GetPagedOrders(OrderFilters filters);
         Task<Domain.Models.Order> GetOrderById(int orderId);
         Task UpdateOrderStatus(int orderId, Domain.Enums.EOrderStatus status);
+        Task UpdateOrderItemQuantity(int orderId, Guid itemId, int quantity);
     }
 }

@@ -151,18 +151,59 @@ namespace RecruitingChallenge.DAL.Repositories.Order
 
         public async Task UpdateOrderStatus(int orderId, EOrderStatus status)
         {
-            await _dbContext.Database.BeginTransactionAsync();
+            try
+            {
+                await _dbContext.Database.BeginTransactionAsync();
 
-            var order = await _dbContext.Orders
-                .FirstOrDefaultAsync(o => o.Id == orderId);
+                var order = await _dbContext.Orders
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
 
-            order.Status = status;
+                order.Status = status;
 
-            _dbContext.Orders.Update(order);
+                _dbContext.Orders.Update(order);
 
-            await _dbContext.SaveChangesAsync();
-            await _dbContext.Database.CommitTransactionAsync();
+                await _dbContext.SaveChangesAsync();
+                await _dbContext.Database.CommitTransactionAsync();
+            }
+            catch 
+            {
+                await _dbContext.Database.RollbackTransactionAsync();
+                throw;
+            }
+            
         }
+
+		public async Task UpdateOrderItemQuantity(int orderId, Guid itemId, int quantity)
+		{
+            try
+            {
+                await _dbContext.Database.BeginTransactionAsync();
+
+                var order = await _dbContext.Orders
+                    .AsTracking()
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                var item = order.OrderItems.FirstOrDefault(oi => oi.Id == itemId);
+
+                item.Quantity = quantity;
+
+                order.TotalAmount = order.OrderItems
+                    .Sum(oi => oi.Quantity * oi.Product.UnitPrice);
+
+                _dbContext.Orders.Update(order);
+
+                await _dbContext.SaveChangesAsync();
+                await _dbContext.Database.CommitTransactionAsync();
+            }
+            catch (Exception)
+            {
+                await _dbContext.Database.RollbackTransactionAsync();
+                throw;
+            }
+			
+		}
 
         private IQueryable<OrderEntity> ApplySorting(IQueryable<OrderEntity> query, OrderFilters filters)
         {

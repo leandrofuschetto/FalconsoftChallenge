@@ -47,6 +47,9 @@ namespace RecruitingChallenge.API.Middlewares
                 case UserNotFoundException:
                 case UserNotFoundAnonymousException:
                 case ArgumentException:
+                case OrderNotFoundException:
+                case OrderCannotBeModifiedException:
+                case OrderItemNotFoundException:
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
                 case DataBaseContextException:

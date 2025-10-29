@@ -27,6 +27,7 @@ namespace RecruitingChallenge.API.DTOs.Order
             {
                 getOrderResponse.Items.Add(new OrderItemResponse()
                 {
+                    Id= item.Id,
                     ProductName = item.ProductName,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
@@ -40,6 +41,7 @@ namespace RecruitingChallenge.API.DTOs.Order
 
     public class OrderItemResponse
     { 
+        public Guid Id { get; set; }
         public int Quantity { get; set; }
         public string ProductName { get; set; }
         public decimal UnitPrice { get; set; }
