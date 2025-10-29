@@ -21,4 +21,8 @@
     <ProjectReference Include="..\RecruitingChallenge.Service\RecruitingChallenge.Service.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+	  <InternalsVisibleTo Include="RecruitingChallenge.API.Integration.Tests"/>
+  </ItemGroup>
+
 </Project>

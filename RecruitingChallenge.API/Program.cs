@@ -61,12 +61,16 @@ builder.Services.AddScoped<JwtHelper, JwtHelper>();
 
 builder.Services.AddSingleton(mapper);
 
-builder.Services.AddDbContext<OrderNowDbContext>(options =>
+// Only register SQL Server if not in testing environment
+if (!builder.Environment.EnvironmentName.Equals("IntegrationTests", StringComparison.OrdinalIgnoreCase))
 {
-    options
-        .UseSqlServer(builder.Configuration.GetConnectionString("DbConn"))
-        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-});
+    builder.Services.AddDbContext<OrderNowDbContext>(options =>
+    {
+        options
+            .UseSqlServer(builder.Configuration.GetConnectionString("DbConn"))
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    });
+}
 
 builder.Services.AddSwaggerGen(option =>
 {
@@ -100,10 +104,13 @@ var app = builder.Build();
 
 Environment.SetEnvironmentVariable("Environment", builder.Configuration["Environment"]);
 
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.EnvironmentName.Equals("IntegrationTests", StringComparison.OrdinalIgnoreCase))
 {
-    var context = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
-    context.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
+        context.Database.Migrate();
+    }
 }
 
 // Configure the HTTP request pipeline.
