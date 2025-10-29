@@ -15,7 +15,6 @@ namespace RecruitingChallenge.API.Integration.Tests
 
             builder.ConfigureServices(services =>
             {
-                // Add InMemory database for testing
                 services.AddDbContext<OrderNowDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("IntegrationTestsDb")
@@ -29,7 +28,6 @@ namespace RecruitingChallenge.API.Integration.Tests
                 var db = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
                 db.Database.EnsureCreated();
                 
-                // Seed test data
                 SeedTestData(db);
             });
         }
@@ -110,56 +108,6 @@ namespace RecruitingChallenge.API.Integration.Tests
             context.OrderItems.Add(orderItem);
 
             context.SaveChanges();
-        }
-
-        public void PrintDatabaseContents()
-        {
-            using var scope = Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
-            
-            Console.WriteLine("=== DATABASE CONTENTS ===");
-            
-            // Users
-            var users = context.Users.ToList();
-            Console.WriteLine($"\n--- USERS ({users.Count}) ---");
-            foreach (var user in users)
-            {
-                Console.WriteLine($"ID: {user.Id}, Username: {user.Username}, Password: {user.Password}, Salt: {user.Salt}");
-            }
-            
-            // Clients
-            var clients = context.Clients.ToList();
-            Console.WriteLine($"\n--- CLIENTS ({clients.Count}) ---");
-            foreach (var client in clients)
-            {
-                Console.WriteLine($"ID: {client.Id}, Name: {client.Name} {client.LastName}, Email: {client.Email}");
-            }
-            
-            // Products
-            var products = context.Products.ToList();
-            Console.WriteLine($"\n--- PRODUCTS ({products.Count}) ---");
-            foreach (var product in products)
-            {
-                Console.WriteLine($"ID: {product.Id}, Name: {product.Name}, Price: {product.UnitPrice}, Description: {product.Description}");
-            }
-            
-            // Orders
-            var orders = context.Orders.ToList();
-            Console.WriteLine($"\n--- ORDERS ({orders.Count}) ---");
-            foreach (var order in orders)
-            {
-                Console.WriteLine($"ID: {order.Id}, ClientId: {order.ClientId}, Status: {order.Status}, Total: {order.TotalAmount}, Date: {order.EntryDate}");
-            }
-            
-            // Order Items
-            var orderItems = context.OrderItems.ToList();
-            Console.WriteLine($"\n--- ORDER ITEMS ({orderItems.Count}) ---");
-            foreach (var item in orderItems)
-            {
-                Console.WriteLine($"ID: {item.Id}, OrderId: {item.OrderId}, ProductId: {item.ProductId}, Quantity: {item.Quantity}");
-            }
-            
-            Console.WriteLine("=== END DATABASE CONTENTS ===\n");
         }
     }
 }

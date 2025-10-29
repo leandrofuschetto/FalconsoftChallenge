@@ -18,7 +18,6 @@ namespace RecruitingChallenge.API.Integration.Tests
         [Test]
         public async Task GetOrderById()
         {
-            // Arrange - First authenticate to get a token
             var loginRequest = new
             {
                 UserName = "leandrof",
@@ -37,7 +36,6 @@ namespace RecruitingChallenge.API.Integration.Tests
                 PropertyNameCaseInsensitive = true
             });
 
-            // Add the token to the Authorization header
             _client.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginResult.Token);
 
