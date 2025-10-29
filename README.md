@@ -2,7 +2,7 @@
 
 ## Table of contents
 * [Como ejecutarlo](#Como-ejecutarlo)
-* [Tecnologías](#Tecnologias)
+* [Tecnologías](#Tecnologías)
 * [Endpoints](#Endpoints)
 * [DB](#DB) 
 
@@ -16,7 +16,7 @@ Para la DB, en la primer corrida de la aplicacion, la BD es creada y valores ini
 ***
 <br />
 
-## Technlogies
+## Tecnologías
 * C#
 * NET 8
 * EF Core
@@ -36,7 +36,7 @@ Al correr la WebAPI se abre swagger en donde se pueden visualizar los siguientes
 * PATCH /api/v1/orders/{id}/orderitems/{itemId}: Endpoint para actualizar la "Quantity" de un item de la orden.
 
 
-## DB Entities
+## DB
 * Users
 * Clients
 * Orders
