@@ -39,6 +39,10 @@ namespace RecruitingChallenge.DAL.Configurations
                 .WithOne(oi => oi.Order)
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(o => o.TotalAmount);
+            builder.HasIndex(o => o.Status);
+            builder.HasIndex(o => o.EntryDate);
         }
     }
 }

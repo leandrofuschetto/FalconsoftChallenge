@@ -30,6 +30,8 @@ namespace RecruitingChallenge.DAL.Configurations
                .WithOne(p => p.Client)
                .HasForeignKey(p => p.ClientId)
                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(c => c.Email);
         }
     }
 }

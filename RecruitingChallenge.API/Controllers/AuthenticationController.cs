@@ -8,12 +8,12 @@ namespace RecruitingChallenge.API.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class LoginController : ControllerBase
+    public class AuthenticationController : ControllerBase
     {
         private readonly IUserService _userService;
         private readonly JwtHelper _jwtHelper;
 
-        public LoginController(IUserService userServices, JwtHelper jwtHelper)
+        public AuthenticationController(IUserService userServices, JwtHelper jwtHelper)
         {
             _userService = userServices;
             _jwtHelper = jwtHelper;
@@ -21,7 +21,7 @@ namespace RecruitingChallenge.API.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginRequest request)
+        public async Task<IActionResult> Authentication(LoginRequest request)
         {
             var user = await _userService.Authenticate(request.UserName, request.Password);
 
