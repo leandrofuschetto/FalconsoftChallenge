@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RecruitingChallenge.API.DTOs.Login;
 using RecruitingChallenge.API.Helpers;
+using RecruitingChallenge.Domain.Exceptions;
 using RecruitingChallenge.Service.Users;
 
 namespace RecruitingChallenge.API.Controllers
@@ -26,7 +27,7 @@ namespace RecruitingChallenge.API.Controllers
             var user = await _userService.Authenticate(request.UserName, request.Password);
 
             if (user == null)
-                throw new Exception("//to do - custom exception");
+                throw new UserNotFoundAnonymousException();
 
             var token = _jwtHelper.GenerateJwtToken(user);
 

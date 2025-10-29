@@ -12,4 +12,17 @@
             Exception ex = null)
             : base(message, ex) { }
     }
+
+    public class UserNotFoundAnonymousException : Exception
+    {
+        public string Code { get; private set; } = "AUTH_GENERAL_ERROR";
+
+        public UserNotFoundAnonymousException(string message = null)
+            : base(message) { }
+
+        public UserNotFoundAnonymousException(
+            string message,
+            Exception ex = null)
+            : base(message, ex) { }
+    }
 }

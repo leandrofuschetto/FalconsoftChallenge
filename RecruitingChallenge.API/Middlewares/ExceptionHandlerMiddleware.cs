@@ -41,9 +41,12 @@ namespace RecruitingChallenge.API.Middlewares
             switch (error)
             {
                 case AuthenticationErrorException:
+                case JWTException:
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     break;
                 case UserNotFoundException:
+                case UserNotFoundAnonymousException:
+                case ArgumentException:
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
                 case DataBaseContextException:

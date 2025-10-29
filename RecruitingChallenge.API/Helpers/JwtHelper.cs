@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using RecruitingChallenge.Domain.Exceptions;
 using RecruitingChallenge.Domain.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -35,7 +36,7 @@ namespace RecruitingChallenge.API.Helpers
             if (token != null)
                 return tokenResponse;
 
-            throw new Exception("//to do custom - Error generating JWT token");
+            throw new JWTException("Error creating token.");
         }
     }
 }
