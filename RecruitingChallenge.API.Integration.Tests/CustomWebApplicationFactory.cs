@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RecruitingChallenge.API.DTOs.Login;
 using RecruitingChallenge.DAL;
 using RecruitingChallenge.Domain.Models;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -21,9 +22,15 @@ namespace RecruitingChallenge.API.Integration.Tests
 
             builder.ConfigureServices(services =>
             {
+                const string TestDbFile = "test.db";
+                if (File.Exists(TestDbFile))
+                {
+                    try { File.Delete(TestDbFile); } catch { /* ignore if locked */ }
+                }
+
                 services.AddDbContext<OrderNowDbContext>(options =>
                 {
-                    options.UseSqlite("DataSource=test.db")
+                    options.UseSqlite($"DataSource={TestDbFile}")
                            .EnableSensitiveDataLogging()
                            .EnableDetailedErrors();
                 });
@@ -115,8 +122,8 @@ namespace RecruitingChallenge.API.Integration.Tests
         {
             var loginRequest = new
             {
-                UserName = "leandrof",
-                Password = "lean1234"
+                UserName = "admin_test",
+                Password = "admin1234"
             };
 
             var loginJson = JsonSerializer.Serialize(loginRequest);
