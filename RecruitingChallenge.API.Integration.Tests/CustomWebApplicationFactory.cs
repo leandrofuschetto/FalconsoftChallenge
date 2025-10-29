@@ -33,6 +33,7 @@ namespace RecruitingChallenge.API.Integration.Tests
 
                 using var scope = sp.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
+                
                 db.Database.EnsureCreated();
 
                 if (!db.Users.Any())
@@ -45,15 +46,7 @@ namespace RecruitingChallenge.API.Integration.Tests
         private OrderNowDbContext _testContext;
         private readonly object _contextLock = new object();
 
-        protected async Task AddToDateBase<TEntity>(TEntity entity) where TEntity : class
-        {
-            GetOrCreateTestContext();
-            
-            await _testContext!.Set<TEntity>().AddAsync(entity);
-            await _testContext.SaveChangesAsync();
-        }
-
-        protected async Task AddMultipleToDatabase(params object[] entities)
+        protected async Task AddToDataBase(params object[] entities)
         {
             GetOrCreateTestContext();
 
@@ -69,18 +62,12 @@ namespace RecruitingChallenge.API.Integration.Tests
         {
             GetOrCreateTestContext();
 
-            // Use Respawn to quickly reset the database
-            var respawner = await Respawner.CreateAsync(_testContext!.Database.GetConnectionString()!, new RespawnerOptions
-            {
-                TablesToIgnore = new Respawn.Graph.Table[]
-                {
-                    "__EFMigrationsHistory", // Keep migration history
-                    "Users" // Keep the user for authentication
-                },
-                DbAdapter = DbAdapter.SqlServer
-            });
-
-            await respawner.ResetAsync(_testContext.Database.GetConnectionString()!);
+            _testContext!.OrderItems.RemoveRange(_testContext.OrderItems);
+            _testContext.Orders.RemoveRange(_testContext.Orders);
+            _testContext.Products.RemoveRange(_testContext.Products);
+            _testContext.Clients.RemoveRange(_testContext.Clients);
+            
+            await _testContext.SaveChangesAsync();
         }
 
         protected async Task<TEntity> FindOnDatabase<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : class
@@ -113,6 +100,7 @@ namespace RecruitingChallenge.API.Integration.Tests
                     {
                         var scope = Services.CreateScope();
                         _testContext = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
+                        
                     }
                 }
             }

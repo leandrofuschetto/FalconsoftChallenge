@@ -44,13 +44,15 @@ namespace RecruitingChallenge.API.Middlewares
                 case JWTException:
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     break;
-                case UserNotFoundException:
                 case UserNotFoundAnonymousException:
                 case ArgumentException:
-                case OrderNotFoundException:
                 case OrderCannotBeModifiedException:
-                case OrderItemNotFoundException:
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    break;
+                case UserNotFoundException:
+                case OrderNotFoundException:
+                case OrderItemNotFoundException:
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
                     break;
                 case DataBaseContextException:
                 default:

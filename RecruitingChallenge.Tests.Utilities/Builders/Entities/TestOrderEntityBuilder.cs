@@ -19,7 +19,7 @@ namespace RecruitingChallenge.Tests.Utilities.Builders.Entities
             return this;
         }
 
-        public TestOrderEntityBuilder WithEntryDate(EOrderStatus status)
+        public TestOrderEntityBuilder WithStatus(EOrderStatus status)
         {
             orderEntity.Status = status;
             return this;

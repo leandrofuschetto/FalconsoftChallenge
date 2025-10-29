@@ -2,6 +2,7 @@
 using RecruitingChallenge.API.DTOs.Order;
 using RecruitingChallenge.API.Filters;
 using RecruitingChallenge.Common.Models;
+using RecruitingChallenge.Domain.Exceptions;
 using RecruitingChallenge.Service.Orders;
 
 namespace RecruitingChallenge.API.Controllers
@@ -42,6 +43,9 @@ namespace RecruitingChallenge.API.Controllers
         public async Task<IActionResult> GetOrderById(int id)
         {
             var order = await _orderService.GetOrderById(id);
+
+            if (order == null)
+                throw new OrderNotFoundException();
 
             var orderResponse = GetOrderResponse.FromDomain(order);
 
