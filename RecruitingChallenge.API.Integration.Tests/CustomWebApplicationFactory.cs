@@ -33,7 +33,6 @@ namespace RecruitingChallenge.API.Integration.Tests
                 var db = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
                 db.Database.EnsureCreated();
 
-                // Only seed the user once during application startup
                 if (!db.Users.Any())
                 {
                     SeedTestData(db);
@@ -41,32 +40,48 @@ namespace RecruitingChallenge.API.Integration.Tests
                 });
         }
 
+        private OrderNowDbContext _testContext;
+        private readonly object _contextLock = new object();
+
         protected async Task AddToDateBase<TEntity>(TEntity entity) where TEntity : class
         {
-            using var scope = Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
-
-            // Ensure database is created
-            await context.Database.EnsureCreatedAsync();
-
-            await context.Set<TEntity>().AddAsync(entity);
-            await context.SaveChangesAsync();
+            GetOrCreateTestContext();
+            
+            await _testContext!.Set<TEntity>().AddAsync(entity);
+            await _testContext.SaveChangesAsync();
         }
 
         protected async Task AddMultipleToDatabase(params object[] entities)
         {
-            using var scope = Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
-
-            // Ensure database is created
-            await context.Database.EnsureCreatedAsync();
+            GetOrCreateTestContext();
 
             foreach (var entity in entities)
             {
-                await context.AddAsync(entity);
+                await _testContext!.AddAsync(entity);
             }
 
-            await context.SaveChangesAsync();
+            await _testContext!.SaveChangesAsync();
+        }
+
+        private void GetOrCreateTestContext()
+        {
+            if (_testContext == null)
+            {
+                lock (_contextLock)
+                {
+                    if (_testContext == null)
+                    {
+                        var scope = Services.CreateScope();
+                        _testContext = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
+                    }
+                }
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _testContext?.Dispose();
+            base.Dispose(disposing);
         }
 
         protected async Task<HttpClient> AuthenticateAsync()

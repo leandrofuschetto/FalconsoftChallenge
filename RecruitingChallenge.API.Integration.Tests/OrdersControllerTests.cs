@@ -14,13 +14,9 @@ namespace RecruitingChallenge.API.Integration.Tests
 {
     internal class OrdersControllerTests : CustomWebApplicationFactory
     {
-        private HttpClient _client;
-
         [SetUp]
         public void Setup() 
         {
-            var factory = new CustomWebApplicationFactory();
-            _client = factory.CreateClient();
         }
 
         [Test]
