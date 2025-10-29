@@ -10,7 +10,7 @@ namespace RecruitingChallenge.API.DTOs.Order
         public ESortOrderByProperty SortOrderByProperty { get; set; } = ESortOrderByProperty.Id;
         public ESortOrientation Orientation { get; set; } = ESortOrientation.Asc;
 
-        [DateFormat("yyyy-MM-dd")]
+        [DateFormatValidation("yyyy-MM-dd")]
         public string EntryDateFilter { get; set; }
 
         public decimal? AmountFilter { get; set; }

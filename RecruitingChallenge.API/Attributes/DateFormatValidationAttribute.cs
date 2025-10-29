@@ -3,11 +3,11 @@ using System.Globalization;
 
 namespace RecruitingChallenge.API.Filters
 {
-    public class DateFormatAttribute : ValidationAttribute
+    public class DateFormatValidationAttribute : ValidationAttribute
     {
         private readonly string _format;
 
-        public DateFormatAttribute(string format)
+        public DateFormatValidationAttribute(string format)
         {
             _format = format;
             ErrorMessage = $"Date must be in format {_format}";
