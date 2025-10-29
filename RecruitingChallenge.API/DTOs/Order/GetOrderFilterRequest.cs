@@ -1,4 +1,5 @@
 ﻿using RecruitingChallenge.API.Filters;
+using RecruitingChallenge.Common.Enums;
 using RecruitingChallenge.Domain.Enums;
 using RecruitingChallenge.Service.Models;
 using System.ComponentModel.DataAnnotations;

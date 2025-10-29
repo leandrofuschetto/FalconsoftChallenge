@@ -1,16 +1,13 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RecruitingChallenge.Common.Enums;
 using RecruitingChallenge.Common.Extensions;
 using RecruitingChallenge.DAL.Entities;
 using RecruitingChallenge.DAL.Filters;
 using RecruitingChallenge.DAL.Repositories.User;
 using RecruitingChallenge.Domain.Enums;
 using RecruitingChallenge.Domain.Exceptions;
-using System.Globalization;
-using System.Linq;
-using System.Linq.Expressions;
 
 namespace RecruitingChallenge.DAL.Repositories.Order
 {

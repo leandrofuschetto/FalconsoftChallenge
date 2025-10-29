@@ -1,12 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RecruitingChallenge.DAL.Repositories.Order;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RecruitingChallenge.DAL.Entities
+﻿namespace RecruitingChallenge.DAL.Entities
 {
     public class ClientEntity
     {

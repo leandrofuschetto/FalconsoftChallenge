@@ -1,4 +1,5 @@
-﻿using RecruitingChallenge.Domain.Enums;
+﻿using RecruitingChallenge.Common.Enums;
+using RecruitingChallenge.Domain.Enums;
 
 namespace RecruitingChallenge.DAL.Filters
 {

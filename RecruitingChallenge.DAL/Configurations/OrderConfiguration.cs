@@ -2,11 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RecruitingChallenge.DAL.Entities;
 using RecruitingChallenge.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RecruitingChallenge.DAL.Configurations
 {
