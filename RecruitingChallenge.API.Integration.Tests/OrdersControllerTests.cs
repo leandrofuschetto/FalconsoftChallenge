@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Azure.Identity;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
@@ -30,7 +31,7 @@ namespace RecruitingChallenge.API.Integration.Tests
         public async Task GetOrderById_HappyPath()
         {
             // Arrange
-            (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase(id: 1);
+            (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase(id: 100);
 
             var httpClient = await AuthenticateAsync();
 
@@ -100,26 +101,23 @@ namespace RecruitingChallenge.API.Integration.Tests
             order.Status.Should().Be(statusExpected);
         }
 
-        [Test]
-        public async Task UpdateOrderItemQuantity_HappyPath()
+        [TestCase(3.0, 1.5, 2, 3)]
+        [TestCase(3.0, 1.0, 4, 1)]
+        public async Task UpdateOrderItemQuantity_HappyPath(decimal totalAmount, decimal unitPrice, int actualQuantity, int newQuantity)
         {
             // Arrange
-            decimal totalAmount = 10;
-            int quantity = 1;
-            decimal unitPrice = 1.5m;
-
-            int quantityExpected = 3;
-            decimal totalAmountExpected = 10 - (quantityExpected * unitPrice);
-
+            decimal totalAmountExpected = newQuantity * unitPrice;
+            
             (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase(
+                id: 100,
                 status: EOrderStatus.Pending,
                 totalAmount: totalAmount,
-                quantity: quantity,
+                quantity: actualQuantity,
                 unitPrice: unitPrice);
 
             var httpClient = await AuthenticateAsync();
 
-            var updateOrderItemRequest = new UpdateOrderItemQuantityRequest() { Quantity = quantityExpected };
+            var updateOrderItemRequest = new UpdateOrderItemQuantityRequest() { Quantity = newQuantity };
 
             // Act
             var response = await httpClient.PatchAsync($"api/v1/orders/{orderEntity.Id}/orderItems/{orderItemEntity.Id}", GetStringContent(updateOrderItemRequest));
@@ -128,9 +126,10 @@ namespace RecruitingChallenge.API.Integration.Tests
             response.EnsureSuccessStatusCode();
 
             var order = await FindOnDatabase<OrderEntity>(o => o.Id == orderEntity.Id);
+            var orderItem = await FindOnDatabase<OrderItemEntity>(oi => oi.Id == orderItemEntity.Id);
 
             order.TotalAmount.Should().Be(totalAmountExpected);
-            order.OrderItems.First().Quantity.Should().Be(quantityExpected);
+            orderItem.Quantity.Should().Be(newQuantity);
         }
 
         private async Task<(OrderItemEntity orderItemEntity, OrderEntity orderEntity)> AddBasicDataEntitiesToDataBase(

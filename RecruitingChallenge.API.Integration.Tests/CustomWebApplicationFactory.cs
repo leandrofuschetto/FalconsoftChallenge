@@ -55,6 +55,7 @@ namespace RecruitingChallenge.API.Integration.Tests
             }
 
             await _testContext!.SaveChangesAsync();
+            _testContext.ChangeTracker.Clear();
         }
 
         protected async Task ClearDatabase()
@@ -76,6 +77,7 @@ namespace RecruitingChallenge.API.Integration.Tests
 
             var entity = await _testContext
                 .Set<TEntity>()
+                .AsNoTracking()
                 .FirstOrDefaultAsync(filter);
 
             return entity;
