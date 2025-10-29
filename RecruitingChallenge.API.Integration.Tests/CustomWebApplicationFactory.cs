@@ -88,15 +88,6 @@ namespace RecruitingChallenge.API.Integration.Tests
             return entity;
         }
 
-        protected async Task<int> CountOnDatabase<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : class
-        {
-            GetOrCreateTestContext();
-
-            return await _testContext
-                .Set<TEntity>()
-                .CountAsync(filter);
-        }
-
         private void GetOrCreateTestContext()
         {
             if (_testContext == null)
@@ -110,12 +101,6 @@ namespace RecruitingChallenge.API.Integration.Tests
                     }
                 }
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            _testContext?.Dispose();
-            base.Dispose(disposing);
         }
 
         protected async Task<HttpClient> AuthenticateAsync()
@@ -151,8 +136,6 @@ namespace RecruitingChallenge.API.Integration.Tests
                 JsonSerializer.Serialize<T>(request),
                 Encoding.UTF8,
                 "application/json");
-
-        protected void GetHttpClient() => CreateClient();
 
         private void SeedTestData(OrderNowDbContext context)
         {
