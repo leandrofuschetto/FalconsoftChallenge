@@ -19,10 +19,10 @@ namespace RecruitingChallenge.Service.Users
             var user = await _userRepository.GetByUsername(username);
 
             if (user == null)
-                throw new AuthenticationErrorException();
+                throw new AuthenticationErrorException("Authentication error");
 
             if (Hasher.HashPassword(password, user.Salt) != user.Password)
-                throw new AuthenticationErrorException();
+                throw new AuthenticationErrorException("Authentication error");
             
             return user;
         }

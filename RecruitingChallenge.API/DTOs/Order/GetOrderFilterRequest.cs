@@ -29,15 +29,18 @@ namespace RecruitingChallenge.API.DTOs.Order
             {
                 SortByProperty = this.SortOrderByProperty,
                 Orientation = this.Orientation,
-                LastCursorId = this.lastCursorId,
-                LastCursorValue = this.lastCursorValue,
-                AmountFilter = this.AmountFilter,
                 OrderStatusFilter = this.OrderStatusFilter,
                 ClientEmailFilter = this.ClientEmailFilter,
-
+                AmountFilter = this.AmountFilter,
+                LastCursorId = this.lastCursorId,
+                
                 EntryDateFilter = !string.IsNullOrWhiteSpace(this.EntryDateFilter)
                     ? Convert.ToDateTime(this.EntryDateFilter)
-                    : null
+                    : null,
+                
+                LastCursorValue = this.SortOrderByProperty.Equals(ESortOrderByProperty.TotalAmount)
+                    ? this.lastCursorValue?.Replace(".", ",")
+                    : this.lastCursorValue
             };
         }
     }
