@@ -20,12 +20,14 @@ namespace RecruitingChallenge.Service.Orders
         {
             var orderFilters = new OrderFilters()
             {
+                SortBy = model.SortByProperty,
                 Orientation = model.Orientation,
-                SortBy = model.SortBy,
                 LastCursorId = model.LastCursorId,
                 LastCursorValue = model.LastCursorValue,
-                FilterOperator = model.FilterOperator,
-                FilterValue = model.FilterValue
+                AmountFilter = model.AmountFilter,
+                ClientEmailFilter = model.ClientEmailFilter,
+                EntryDateFilter = model.EntryDateFilter,
+                OrderStatusFilter = model.OrderStatusFilter,
             };
 
             var orders = _orderRepository.GetPagedOrders(orderFilters);

@@ -2,6 +2,7 @@
 using Azure.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RecruitingChallenge.Common.Extensions;
 using RecruitingChallenge.DAL.Entities;
 using RecruitingChallenge.DAL.Filters;
 using RecruitingChallenge.DAL.Repositories.User;
@@ -41,16 +42,16 @@ namespace RecruitingChallenge.DAL.Repositories.Order
                     .ThenInclude(o => o.Product)
                     .AsQueryable();
 
-                if (!string.IsNullOrEmpty(filters.FilterValue))
-                    query = ApplyFilter(query, filters.SortBy, filters.FilterOperator, filters.FilterValue);
-                
-                query = ApplySorting(query, filters);
-                
+                query = ApplyFilters(query, filters);
+
+                if (filters.SortBy.HasValue)
+                    query = ApplySorting(query, filters);
+
                 if (filters.LastCursorId.HasValue && !string.IsNullOrWhiteSpace(filters.LastCursorValue))
                     query = ApplyKeyset(
                         query, 
-                        filters.SortBy, 
-                        filters.Orientation, 
+                        filters.SortBy ?? ESortOrderByProperty.Id, 
+                        filters.Orientation ?? ESortOrientation.Asc, 
                         filters.LastCursorValue, 
                         filters.LastCursorId ?? 0);
 
@@ -58,25 +59,24 @@ namespace RecruitingChallenge.DAL.Repositories.Order
                     .Take(PageSize + 1)
                     .ToListAsync();
 
-                var domainList = _mapper.Map<IEnumerable<Domain.Models.Order>>(items);
-
                 bool hasNextPage = items.Count > PageSize;
                 
-                if (!hasNextPage)
-                { 
-                    return new Common.Models.PagedResult<Domain.Models.Order>(
-                        domainList.ToList().AsReadOnly(),
-                        null,
-                        null,
-                        false);
+                if (hasNextPage)
+                    items.RemoveAt(items.Count - 1);
+
+                string nextCursor = null;
+                string nextCursorValue = null;
+                if (hasNextPage && items.Any())
+                {
+                    var lastItem = items.Last();
+                    nextCursor = lastItem.Id.ToString();
+                    nextCursorValue = GetCursorValue(lastItem, filters.SortBy.HasValue ? filters.SortBy.Value : ESortOrderByProperty.Id);
                 }
 
-                items.RemoveAt(items.Count - 1);
-
                 return new Common.Models.PagedResult<Domain.Models.Order>(
-                    domainList.ToList().AsReadOnly(),
-                    GetNextCursorValue(filters, items),
-                    items.Last().Id.ToString(),
+                    items: _mapper.Map<IEnumerable<Domain.Models.Order>>(items).ToList().AsReadOnly(),
+                    nextCursorValue: nextCursorValue,
+                    nextCursor: nextCursor,
                     hasNextPage);
             }
             catch (InvalidOperationException ex)
@@ -99,6 +99,23 @@ namespace RecruitingChallenge.DAL.Repositories.Order
                     ex.Message,
                     ex);
             }
+        }
+
+        private IQueryable<OrderEntity> ApplyFilters(IQueryable<OrderEntity> query, OrderFilters filters)
+        {
+            if (filters.OrderStatusFilter.HasValue)
+                query = query.Where(o => o.Status == filters.OrderStatusFilter.Value);
+
+            if (filters.AmountFilter.HasValue)
+                query = query.Where(o => o.TotalAmount == filters.AmountFilter.Value);
+
+            if (!string.IsNullOrWhiteSpace(filters.ClientEmailFilter))
+                query = query.Where(o => o.Client.Email == filters.ClientEmailFilter);
+
+            if (filters.EntryDateFilter.HasValue)
+                query = query.Where(o => o.EntryDate == Convert.ToDateTime(filters.EntryDateFilter.Value));
+
+            return query;
         }
 
         public async Task<Domain.Models.Order> GetOrderById(int orderId)
@@ -152,126 +169,116 @@ namespace RecruitingChallenge.DAL.Repositories.Order
 
         private IQueryable<OrderEntity> ApplySorting(IQueryable<OrderEntity> query, OrderFilters filters)
         {
-            Expression<Func<OrderEntity, object>> keySelector = GetKeySelector(filters);
-
-            if (filters.Orientation.Equals(ESortOrientation.Asc))
-                query = query.OrderBy(keySelector).ThenBy(o => o.Id);
-            else
-                query = query.OrderByDescending(keySelector).ThenByDescending(o => o.Id);
-
-            return query;
-        }
-
-        private IQueryable<OrderEntity> ApplyKeyset(IQueryable<OrderEntity> query, EOrderSort field, ESortOrientation orientation, string lastValue, int lastId)
-        {
-            var param = Expression.Parameter(typeof(OrderEntity), "o");
-            var prop = Expression.Property(param, field.ToString());
-            
-            var constantValue = GetConstantValueParsed(lastValue, prop);
-            var constVal = Expression.Constant(Convert.ChangeType(constantValue, prop.Type));
-
-            var idProp = Expression.Property(param, nameof(OrderEntity.Id));
-            var constId = Expression.Constant(lastId);
-
-            Expression condition;
-            if (orientation.Equals(ESortOrientation.Asc))
+            return filters.SortBy switch
             {
-                var greater = Expression.GreaterThan(prop, constVal);
-                var equalAndId = Expression.AndAlso(Expression.Equal(prop, constVal), Expression.GreaterThan(idProp, constId));
-                condition = Expression.OrElse(greater, equalAndId);
-            }
-            else
-            {
-                var less = Expression.LessThan(prop, constVal);
-                var equalAndId = Expression.AndAlso(Expression.Equal(prop, constVal), Expression.LessThan(idProp, constId));
-                condition = Expression.OrElse(less, equalAndId);
-            }
+                ESortOrderByProperty.Id => filters.Orientation == ESortOrientation.Asc
+                    ? query.OrderBy(x => x.Id)
+                    : query.OrderByDescending(x => x.Id),
 
-            var lambda = Expression.Lambda<Func<OrderEntity, bool>>(condition, param);
-            
-            return query.Where(lambda);
-        }
+                ESortOrderByProperty.EntryDate => filters.Orientation == ESortOrientation.Asc
+                    ? query.OrderBy(x => x.EntryDate).ThenBy(x => x.Id)
+                    : query.OrderByDescending(x => x.EntryDate).ThenByDescending(x => x.Id),
 
-        private IQueryable<OrderEntity> ApplyFilter(
-            IQueryable<OrderEntity> query, 
-            EOrderSort field, 
-            EFilterOperator op, 
-            string filterValue)
-        {
-            var param = Expression.Parameter(typeof(OrderEntity), "o");
-            var property = Expression.Property(param, field.ToString());
-            var constantValue = GetConstantValueParsed(filterValue, property);
-            
-            var constant = Expression.Constant(Convert.ChangeType(constantValue, property.Type));
+                ESortOrderByProperty.TotalAmount => filters.Orientation == ESortOrientation.Asc
+                    ? query.OrderBy(x => x.TotalAmount).ThenBy(x => x.Id)
+                    : query.OrderByDescending(x => x.TotalAmount).ThenByDescending(x => x.Id),
 
-            Expression body = op switch
-            {
-                EFilterOperator.GraterThan => Expression.GreaterThan(property, constant),
-                EFilterOperator.LessThan => Expression.LessThan(property, constant),
-                EFilterOperator.GraterThanOrEqual => Expression.GreaterThanOrEqual(property, constant),
-                EFilterOperator.LessThanOrEqual => Expression.LessThanOrEqual(property, constant),
-                _ => Expression.Equal(property, constant)
+                ESortOrderByProperty.Status => filters.Orientation == ESortOrientation.Asc
+                    ? query.OrderBy(x => x.Status).ThenBy(x => x.Id)
+                    : query.OrderByDescending(x => x.Status).ThenByDescending(x => x.Id),
+
+                ESortOrderByProperty.ClientEmail => filters.Orientation == ESortOrientation.Asc
+                    ? query.OrderBy(x => x.Client.Email).ThenBy(x => x.Id)
+                    : query.OrderByDescending(x => x.Client.Email).ThenByDescending(x => x.Id),
+
+                _ => throw new ArgumentException($"Unsupported sort property: {filters.SortBy}")
             };
-
-            var lambda = Expression.Lambda<Func<OrderEntity, bool>>(body, param);
-            return query.Where(lambda);
         }
 
-        private static object GetConstantValueParsed(string filterValue, MemberExpression property)
+        private IQueryable<OrderEntity> ApplyKeyset(
+            IQueryable<OrderEntity> query, 
+            ESortOrderByProperty sortByProperty, 
+            ESortOrientation orientation, 
+            string lastValue, 
+            int lastId)
         {
-            object constantValue;
-            var propertyType = Type.GetTypeCode(property.Type);
-
-            switch (propertyType)
+            return sortByProperty switch
             {
-                case TypeCode.Decimal:
-                    var normalized = filterValue?.Replace('.', ',') ?? "0";
-                    constantValue = Convert.ToDecimal(normalized);
-                    break;
-                case TypeCode.Int32:
-                    constantValue = int.Parse(filterValue ?? "0");
-                    break;
-                case TypeCode.DateTime:
-                    constantValue = DateTime.Parse(filterValue ?? "1970-01-01", CultureInfo.InvariantCulture);
-                    break;
-                default:
-                    constantValue = filterValue ?? string.Empty;
-                    break;
-            }
-
-            return constantValue;
+                ESortOrderByProperty.Id => ApplyKeysetPaginationById(query, lastId, int.Parse(lastValue), orientation),
+                ESortOrderByProperty.EntryDate => ApplyKeysetPaginationByEntryDate(query, lastId, Convert.ToDateTime(lastValue), orientation),
+                ESortOrderByProperty.TotalAmount => ApplyKeysetPaginationByTotalAmount(query, lastId, decimal.Parse(lastValue), orientation),
+                ESortOrderByProperty.Status => ApplyKeysetPaginationByStatus(query, lastId, Enum.Parse<EOrderStatus>(lastValue), orientation),
+                ESortOrderByProperty.ClientEmail => ApplyKeysetPaginationByClientEmail(query, lastId, lastValue, orientation),
+                _ => throw new ArgumentException($"Unsupported sort property: {sortByProperty}")
+            };
         }
 
-        private Expression<Func<OrderEntity, object>> GetKeySelector(OrderFilters filters)
+        private IQueryable<OrderEntity> ApplyKeysetPaginationById(
+            IQueryable<OrderEntity> query, 
+            int lastId, 
+            int lastValue, 
+            ESortOrientation orientation)
         {
-            switch (filters.SortBy)
+            return orientation == ESortOrientation.Asc
+                ? query.Where(x => x.Id > lastValue)
+                : query.Where(x => x.Id < lastValue);
+        }
+
+        private IQueryable<OrderEntity> ApplyKeysetPaginationByEntryDate(
+            IQueryable<OrderEntity> query,
+            int lastId,
+            DateTime lastValue,
+            ESortOrientation orientation)
+        {
+            return orientation == ESortOrientation.Asc
+                ? query.Where(x => x.EntryDate > lastValue || (x.EntryDate == lastValue && x.Id > lastId))
+                : query.Where(x => x.EntryDate < lastValue || (x.EntryDate == lastValue && x.Id < lastId));
+        }
+
+        private IQueryable<OrderEntity> ApplyKeysetPaginationByTotalAmount(
+            IQueryable<OrderEntity> query, 
+            int lastId, 
+            decimal lastValue, 
+            ESortOrientation orientation)
+        {
+            return orientation == ESortOrientation.Asc
+                ? query.Where(x => x.TotalAmount > lastValue || (x.TotalAmount == lastValue && x.Id > lastId))
+                : query.Where(x => x.TotalAmount < lastValue || (x.TotalAmount  == lastValue && x.Id < lastId));
+        }
+
+        private IQueryable<OrderEntity> ApplyKeysetPaginationByStatus(
+            IQueryable<OrderEntity> query,
+            int lastId,
+            EOrderStatus lastValue,
+            ESortOrientation orientation)
+        {
+            return orientation == ESortOrientation.Asc  
+                ? query.Where(x => x.Status > lastValue || (x.Status == lastValue && x.Id > lastId))
+                : query.Where(x => x.Status < lastValue || (x.Status == lastValue && x.Id < lastId));
+        }
+
+        private IQueryable<OrderEntity> ApplyKeysetPaginationByClientEmail(
+            IQueryable<OrderEntity> query, 
+            int lastId, 
+            string lastValue, 
+            ESortOrientation orientation)
+        {
+            return orientation == ESortOrientation.Asc
+                ? query.Where(x => x.Client.Email.CompareTo(lastValue) > 0 || (x.Client.Email == lastValue && x.Id > lastId))
+                : query.Where(x => x.Client.Email.CompareTo(lastValue) < 0 || (x.Client.Email == lastValue && x.Id < lastId));
+        }
+
+        private string GetCursorValue(OrderEntity order, ESortOrderByProperty sortByProperty)
+        {
+            return sortByProperty switch
             {
-                case EOrderSort.EntryDate:
-                    return order => order.EntryDate;
-                case EOrderSort.Status:
-                    return order => order.Status;
-                case EOrderSort.TotalAmount:
-                    return order => order.TotalAmount;
-                case EOrderSort.ClientId:
-                    return order => order.ClientId;
-                default:
-                    return order => order.Id;
-            }
-        }
-
-        private static string GetNextCursorValue(
-            OrderFilters filters,
-            List<OrderEntity> items)
-        {
-            var lastItem = items.Last();
-            
-            var property = lastItem.GetType().GetProperty(filters.SortBy.ToString());
-
-            if (property == null)
-                return lastItem.Id.ToString();
-
-            var value = property.GetValue(lastItem);
-            return value?.ToString();
+                ESortOrderByProperty.Id => order.Id.ToString(),
+                ESortOrderByProperty.EntryDate => order.EntryDate.ToString("yyyy-MM-dd").TryFormatAsDate(),
+                ESortOrderByProperty.TotalAmount => order.TotalAmount.ToString("F2"),
+                ESortOrderByProperty.Status => order.Status.ToString(),
+                ESortOrderByProperty.ClientEmail => order.Client.Email,
+                _ => order.Id.ToString()
+            };
         }
     }
 }

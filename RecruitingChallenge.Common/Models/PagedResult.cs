@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RecruitingChallenge.Common.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,7 @@ namespace RecruitingChallenge.Common.Models
         public PagedResult(IReadOnlyList<T> items, string? nextCursorValue, string? nextCursor, bool hasNextPage)
         {
             Items = items;
-            NextCursorValue = nextCursorValue;
+            NextCursorValue = nextCursorValue?.ToString().TryFormatAsDate();
             NextCursor = nextCursor;
             HasNextPage = hasNextPage;
         }

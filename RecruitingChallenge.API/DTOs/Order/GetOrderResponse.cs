@@ -5,8 +5,8 @@ namespace RecruitingChallenge.API.DTOs.Order
     public class GetOrderResponse
     {
         public int Id { get; set; }
-        public string ClientFullName { get; set; }
-        public DateTime OrderDate { get; set; }
+        public string ClientEmail { get; set; }
+        public string OrderDate { get; set; }
         public string OrderStatus { get; set; }
         public decimal TotalAmount { get; set; }
 
@@ -17,8 +17,8 @@ namespace RecruitingChallenge.API.DTOs.Order
             var getOrderResponse = new GetOrderResponse
             {
                 Id = order.Id,
-                ClientFullName = order.Client.FullName,
-                OrderDate = order.EntryDate,
+                ClientEmail = order.Client.Email,
+                OrderDate = order.EntryDate.ToString("yyyy-MM-dd"),
                 OrderStatus = order.Status.ToString(),
                 TotalAmount = order.TotalAmount
             };
