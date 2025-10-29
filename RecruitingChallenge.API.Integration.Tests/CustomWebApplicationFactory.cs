@@ -6,7 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using RecruitingChallenge.API.DTOs.Login;
 using RecruitingChallenge.DAL;
 using RecruitingChallenge.Domain.Models;
+using Respawn;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Text.Json;
 
@@ -61,6 +63,44 @@ namespace RecruitingChallenge.API.Integration.Tests
             }
 
             await _testContext!.SaveChangesAsync();
+        }
+
+        protected async Task ClearDatabase()
+        {
+            GetOrCreateTestContext();
+
+            // Use Respawn to quickly reset the database
+            var respawner = await Respawner.CreateAsync(_testContext!.Database.GetConnectionString()!, new RespawnerOptions
+            {
+                TablesToIgnore = new Respawn.Graph.Table[]
+                {
+                    "__EFMigrationsHistory", // Keep migration history
+                    "Users" // Keep the user for authentication
+                },
+                DbAdapter = DbAdapter.SqlServer
+            });
+
+            await respawner.ResetAsync(_testContext.Database.GetConnectionString()!);
+        }
+
+        protected async Task<TEntity> FindOnDatabase<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : class
+        {
+            GetOrCreateTestContext();
+
+            var entity = await _testContext
+                .Set<TEntity>()
+                .FirstOrDefaultAsync(filter);
+
+            return entity;
+        }
+
+        protected async Task<int> CountOnDatabase<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : class
+        {
+            GetOrCreateTestContext();
+
+            return await _testContext
+                .Set<TEntity>()
+                .CountAsync(filter);
         }
 
         private void GetOrCreateTestContext()

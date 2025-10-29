@@ -15,12 +15,14 @@ namespace RecruitingChallenge.API.Integration.Tests
     internal class OrdersControllerTests : CustomWebApplicationFactory
     {
         [SetUp]
-        public void Setup() 
+        public async Task Setup() 
         {
+            await ClearDatabase();
         }
 
-        [Test]
-        public async Task GetOrderById_HappyPath()
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task GetOrderById_HappyPath(int orderId)
         {
             // Arrange
             Guid clientId = Guid.NewGuid();
@@ -47,7 +49,7 @@ namespace RecruitingChallenge.API.Integration.Tests
                 .Build();
 
             var orderEntity = new TestOrderEntityBuilder()
-                .WithId(1)
+                .WithId(orderId)
                 .WithClient(clientEntity)
                 .WithEntryDate(new DateTime(2025, 10, 15))
                 .WithOrderItems(orderItemEntity)
@@ -70,6 +72,8 @@ namespace RecruitingChallenge.API.Integration.Tests
             {
                 PropertyNameCaseInsensitive = true
             });
+
+            var ordersCount = await CountOnDatabase<OrderEntity>(o => o.Id > 0);
 
             Assert.That(orderResponse.Id, Is.EqualTo(orderEntity.Id));
             Assert.That(orderResponse.TotalAmount, Is.EqualTo(orderEntity.TotalAmount));
