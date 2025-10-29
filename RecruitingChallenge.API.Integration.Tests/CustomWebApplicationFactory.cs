@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using RecruitingChallenge.API.DTOs.Login;
 using RecruitingChallenge.DAL;
 using RecruitingChallenge.Domain.Models;
-using Respawn;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -24,7 +23,7 @@ namespace RecruitingChallenge.API.Integration.Tests
             {
                 services.AddDbContext<OrderNowDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase("IntegrationTestsDb")
+                    options.UseSqlite("DataSource=test.db")
                            .EnableSensitiveDataLogging()
                            .EnableDetailedErrors();
                 });
@@ -62,6 +61,7 @@ namespace RecruitingChallenge.API.Integration.Tests
         {
             GetOrCreateTestContext();
 
+            // Clear all data but keep the user for authentication
             _testContext!.OrderItems.RemoveRange(_testContext.OrderItems);
             _testContext.Orders.RemoveRange(_testContext.Orders);
             _testContext.Products.RemoveRange(_testContext.Products);
@@ -100,7 +100,6 @@ namespace RecruitingChallenge.API.Integration.Tests
                     {
                         var scope = Services.CreateScope();
                         _testContext = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
-                        
                     }
                 }
             }

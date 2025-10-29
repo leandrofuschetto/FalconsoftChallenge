@@ -1,4 +1,5 @@
 ﻿using Azure;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
@@ -26,10 +27,10 @@ namespace RecruitingChallenge.API.Integration.Tests
         }
 
         [Test]
-        public async Task GetOrderById_HappyPath(int orderId)
+        public async Task GetOrderById_HappyPath()
         {
             // Arrange
-            (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase();
+            (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase(id: 1);
 
             var httpClient = await AuthenticateAsync();
 
@@ -45,17 +46,17 @@ namespace RecruitingChallenge.API.Integration.Tests
                 PropertyNameCaseInsensitive = true
             });
 
-            Assert.That(orderResponse.Id, Is.EqualTo(orderEntity.Id));
-            Assert.That(orderResponse.TotalAmount, Is.EqualTo(orderEntity.TotalAmount));
-            Assert.That(orderResponse.ClientEmail, Is.EqualTo(orderEntity.Client.Email));
+            orderResponse.Id.Should().Be(orderEntity.Id);
+            orderResponse.TotalAmount.Should().Be(orderEntity.TotalAmount);
+            orderResponse.ClientEmail.Should().Be(orderEntity.Client.Email);
 
-            Assert.That(orderResponse.Items, Is.Not.Null);
-            Assert.That(orderResponse.Items.Count, Is.EqualTo(1));
+            orderResponse.Items.Should().NotBeNull();
+            orderResponse.Items.Should().HaveCount(1);
 
             var orderItem = orderResponse.Items.First();
-            Assert.That(orderItem.Quantity, Is.EqualTo(orderItemEntity.Quantity));
-            Assert.That(orderItem.ProductName, Is.EqualTo(orderItemEntity.Product.Name));
-            Assert.That(orderItem.UnitPrice, Is.EqualTo(orderItemEntity.Product.UnitPrice));
+            orderItem.Quantity.Should().Be(orderItemEntity.Quantity);
+            orderItem.ProductName.Should().Be(orderItemEntity.Product.Name);
+            orderItem.UnitPrice.Should().Be(orderItemEntity.Product.UnitPrice);
         }
 
         [Test]
@@ -70,31 +71,74 @@ namespace RecruitingChallenge.API.Integration.Tests
             var response = await httpClient.GetAsync($"api/v1/orders/{10}");
 
             // Assert
-            Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.NotFound));
+            response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
 
             var content = await response.Content.ReadAsStringAsync();
-            Assert.That(content.Contains("ORDER_NOT_FOUND"));
+            content.Should().Contain("ORDER_NOT_FOUND");
         }
 
         [Test]
         public async Task UpdateOrderStatus_HappyPath()
         {
             // Arrange
-            (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase(EOrderStatus.Pending);
+            (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase(status: EOrderStatus.Pending);
 
             var httpClient = await AuthenticateAsync();
 
-            var updateOrderRequest = new UpdateOrderRequest() { NewStatus = EOrderStatus.Processing };
+            var statusExpected = EOrderStatus.Processing;
+
+            var updateOrderRequest = new UpdateOrderRequest() { NewStatus = statusExpected };
 
             // Act
-            var response = await httpClient.PatchAsync($"api/v1/orders/{10}", GetStringContent(updateOrderRequest));
+            var response = await httpClient.PatchAsync($"api/v1/orders/{orderEntity.Id}", GetStringContent(updateOrderRequest));
 
             // Assert
             response.EnsureSuccessStatusCode();
-            Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.NoContent));
+            response.StatusCode.Should().Be(System.Net.HttpStatusCode.NoContent);
+
+            var order = await FindOnDatabase<OrderEntity>(o => o.Id == orderEntity.Id);
+            order.Status.Should().Be(statusExpected);
         }
 
-        private async Task<(OrderItemEntity orderItemEntity, OrderEntity orderEntity)> AddBasicDataEntitiesToDataBase(EOrderStatus status = EOrderStatus.Processing)
+        [Test]
+        public async Task UpdateOrderItemQuantity_HappyPath()
+        {
+            // Arrange
+            decimal totalAmount = 10;
+            int quantity = 1;
+            decimal unitPrice = 1.5m;
+
+            int quantityExpected = 3;
+            decimal totalAmountExpected = 10 - (quantityExpected * unitPrice);
+
+            (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase(
+                status: EOrderStatus.Pending,
+                totalAmount: totalAmount,
+                quantity: quantity,
+                unitPrice: unitPrice);
+
+            var httpClient = await AuthenticateAsync();
+
+            var updateOrderItemRequest = new UpdateOrderItemQuantityRequest() { Quantity = quantityExpected };
+
+            // Act
+            var response = await httpClient.PatchAsync($"api/v1/orders/{orderEntity.Id}/orderItems/{orderItemEntity.Id}", GetStringContent(updateOrderItemRequest));
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+
+            var order = await FindOnDatabase<OrderEntity>(o => o.Id == orderEntity.Id);
+
+            order.TotalAmount.Should().Be(totalAmountExpected);
+            order.OrderItems.First().Quantity.Should().Be(quantityExpected);
+        }
+
+        private async Task<(OrderItemEntity orderItemEntity, OrderEntity orderEntity)> AddBasicDataEntitiesToDataBase(
+            int id = 1, 
+            EOrderStatus status = EOrderStatus.Processing, 
+            int quantity = 1,
+            decimal totalAmount = 10m,
+            decimal unitPrice = 1.05m)
         {
             Guid clientId = Guid.NewGuid();
 
@@ -107,7 +151,7 @@ namespace RecruitingChallenge.API.Integration.Tests
 
             var productEntity = new TestProductEntityBuilder()
                 .WithId(Guid.NewGuid())
-                .WithUnitPrice(1.05m)
+                .WithUnitPrice(unitPrice)
                 .WithDescription("Product A")
                 .WithEntryDate(new DateTime(2025, 09, 09))
                 .WithName("Product A")
@@ -115,26 +159,26 @@ namespace RecruitingChallenge.API.Integration.Tests
 
             var orderItemEntity = new TestOrderItemEntityBuilder()
                 .WithId(Guid.NewGuid())
-                .WithQuantity(1)
+                .WithQuantity(quantity)
                 .WithProduct(productEntity)
                 .Build();
 
             var orderEntity = new TestOrderEntityBuilder()
-                .WithId(1)
+                .WithId(id)
                 .WithClient(clientEntity)
                 .WithEntryDate(new DateTime(2025, 10, 15))
                 .WithOrderItems(orderItemEntity)
                 .WithStatus(status)
-                .WithTotalAmount(10)
+                .WithTotalAmount(totalAmount)
                 .Build();
 
             await AddToDataBase(clientEntity, productEntity, orderItemEntity, orderEntity);
             return (orderItemEntity, orderEntity);
         }
 
-        private HttpContent GetStringContent(UpdateOrderRequest updateOrderRequest)
+        private HttpContent GetStringContent<T>(T request)
             => new StringContent(
-                JsonConvert.SerializeObject(updateOrderRequest),
+                JsonConvert.SerializeObject(request),
                 Encoding.UTF8,
                 "application/json");
     }
