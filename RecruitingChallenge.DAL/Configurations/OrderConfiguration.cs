@@ -17,7 +17,7 @@ namespace RecruitingChallenge.DAL.Configurations
             builder.HasKey(o => o.Id);
 
             builder.Property(o => o.Id)
-                   .ValueGeneratedOnAdd();
+                .ValueGeneratedOnAdd();
 
             builder.Property(o => o.EntryDate)
                 .IsRequired();
@@ -31,7 +31,7 @@ namespace RecruitingChallenge.DAL.Configurations
                 .HasDefaultValue(EOrderStatus.Pending);
 
             builder.HasOne(o => o.Client)
-                 .WithMany(u => u.Orders)
+                .WithMany(u => u.Orders)
                 .HasForeignKey(o => o.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
