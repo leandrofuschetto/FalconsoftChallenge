@@ -19,7 +19,7 @@ namespace RecruitingChallenge.Service.Users
             var user = await _userRepository.GetByUsername(username);
 
             if (user == null)
-                throw new UserNotFoundException("User not found");
+                throw new AuthenticationErrorException();
 
             if (Hasher.HashPassword(password, user.Salt) != user.Password)
                 throw new AuthenticationErrorException();

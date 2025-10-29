@@ -1,23 +1,12 @@
-﻿using Azure;
-using Azure.Identity;
-using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Identity.Client;
-using Newtonsoft.Json;
+﻿using FluentAssertions;
 using NUnit.Framework;
-using NUnit.Framework.Legacy;
 using RecruitingChallenge.API.DTOs.Order;
-using RecruitingChallenge.Common.Extensions;
-using RecruitingChallenge.DAL;
 using RecruitingChallenge.DAL.Entities;
-using RecruitingChallenge.DAL.Migrations;
 using RecruitingChallenge.Domain.Enums;
-using RecruitingChallenge.Domain.Models;
 using RecruitingChallenge.Tests.Utilities.Builders.Entities;
-using System.Text;
 using System.Text.Json;
 
-namespace RecruitingChallenge.API.Integration.Tests
+namespace RecruitingChallenge.API.Integration.Tests.Controllers
 {
     internal class OrdersControllerTests : CustomWebApplicationFactory
     {
@@ -42,7 +31,7 @@ namespace RecruitingChallenge.API.Integration.Tests
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync();
-            var orderResponse = System.Text.Json.JsonSerializer.Deserialize<GetOrderResponse>(responseContent, new JsonSerializerOptions
+            var orderResponse = JsonSerializer.Deserialize<GetOrderResponse>(responseContent, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
@@ -85,7 +74,7 @@ namespace RecruitingChallenge.API.Integration.Tests
             (OrderItemEntity orderItemEntity, OrderEntity orderEntity) = await AddBasicDataEntitiesToDataBase(status: EOrderStatus.Pending);
 
             var httpClient = await AuthenticateAsync();
-
+            
             var statusExpected = EOrderStatus.Processing;
 
             var updateOrderRequest = new UpdateOrderRequest() { NewStatus = statusExpected };
@@ -133,8 +122,8 @@ namespace RecruitingChallenge.API.Integration.Tests
         }
 
         private async Task<(OrderItemEntity orderItemEntity, OrderEntity orderEntity)> AddBasicDataEntitiesToDataBase(
-            int id = 1, 
-            EOrderStatus status = EOrderStatus.Processing, 
+            int id = 1,
+            EOrderStatus status = EOrderStatus.Processing,
             int quantity = 1,
             decimal totalAmount = 10m,
             decimal unitPrice = 1.05m)
@@ -174,11 +163,5 @@ namespace RecruitingChallenge.API.Integration.Tests
             await AddToDataBase(clientEntity, productEntity, orderItemEntity, orderEntity);
             return (orderItemEntity, orderEntity);
         }
-
-        private HttpContent GetStringContent<T>(T request)
-            => new StringContent(
-                JsonConvert.SerializeObject(request),
-                Encoding.UTF8,
-                "application/json");
     }
 }

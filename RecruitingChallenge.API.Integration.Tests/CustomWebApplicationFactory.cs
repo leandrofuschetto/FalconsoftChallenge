@@ -38,8 +38,7 @@ namespace RecruitingChallenge.API.Integration.Tests
                 if (!db.Users.Any())
                 {
                     SeedTestData(db);
-                }
-                });
+                }});
         }
 
         private OrderNowDbContext _testContext;
@@ -62,7 +61,6 @@ namespace RecruitingChallenge.API.Integration.Tests
         {
             GetOrCreateTestContext();
 
-            // Clear all data but keep the user for authentication
             _testContext!.OrderItems.RemoveRange(_testContext.OrderItems);
             _testContext.Orders.RemoveRange(_testContext.Orders);
             _testContext.Products.RemoveRange(_testContext.Products);
@@ -141,15 +139,23 @@ namespace RecruitingChallenge.API.Integration.Tests
             return httpClient;
         }
 
+        protected HttpContent GetStringContent<T>(T request)
+            => new StringContent(
+                JsonSerializer.Serialize<T>(request),
+                Encoding.UTF8,
+                "application/json");
+
+        protected void GetHttpClient() => CreateClient();
+
         private void SeedTestData(OrderNowDbContext context)
         {
             var user = new RecruitingChallenge.DAL.Entities.UserEntity
             {
                 Id = new Guid("7530ecf3-1ea6-421e-bbf5-0f12c0705cdb"),
                 EntryDate = new DateTime(2025, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                Username = "leandrof",
-                Password = "o3tAEewYaqQ1TlwTX67FGz+j3n89aEgBzjcLMj+XVcw=",
-                Salt = "S1joR6sEUjja+FymlBj+Lw=="
+                Username = "admin_test",
+                Password = "UeZVPwOUUXg1/P/tnFtUy/Xz++GHJDZkf84vcwfQ4jA=",
+                Salt = "AdmIN6sEUjja+FymlBj+Lw=="
             };
 
             context.Users.Add(user);

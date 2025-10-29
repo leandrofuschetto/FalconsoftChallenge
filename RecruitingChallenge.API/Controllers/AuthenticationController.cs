@@ -26,9 +26,6 @@ namespace RecruitingChallenge.API.Controllers
         {
             var user = await _userService.Authenticate(request.UserName, request.Password);
 
-            if (user == null)
-                throw new UserNotFoundAnonymousException();
-
             var token = _jwtHelper.GenerateJwtToken(user);
 
             return Ok(new LoginResponse(token));

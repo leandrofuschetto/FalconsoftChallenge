@@ -44,7 +44,6 @@ namespace RecruitingChallenge.API.Middlewares
                 case JWTException:
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     break;
-                case UserNotFoundAnonymousException:
                 case ArgumentException:
                 case OrderCannotBeModifiedException:
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
