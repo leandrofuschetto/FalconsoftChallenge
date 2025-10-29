@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecruitingChallenge.API.Integration.Tests", "RecruitingChallenge.API.Integration.Tests\RecruitingChallenge.API.Integration.Tests.csproj", "{71273D5D-2005-464E-9DBF-1AE1E8A622C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecruitingChallenge.Tests.Utilities", "RecruitingChallenge.Tests.Utilities\RecruitingChallenge.Tests.Utilities.csproj", "{C51F6F4B-ABA2-4567-B19D-FFFFD267B782}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,12 +55,17 @@ Global
 		{71273D5D-2005-464E-9DBF-1AE1E8A622C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71273D5D-2005-464E-9DBF-1AE1E8A622C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71273D5D-2005-464E-9DBF-1AE1E8A622C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C51F6F4B-ABA2-4567-B19D-FFFFD267B782}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C51F6F4B-ABA2-4567-B19D-FFFFD267B782}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C51F6F4B-ABA2-4567-B19D-FFFFD267B782}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C51F6F4B-ABA2-4567-B19D-FFFFD267B782}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{71273D5D-2005-464E-9DBF-1AE1E8A622C5} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{C51F6F4B-ABA2-4567-B19D-FFFFD267B782} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB21410F-ABA4-4DEE-833F-8D6B05F2E593}

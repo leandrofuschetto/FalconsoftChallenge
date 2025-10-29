@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RecruitingChallenge.API\RecruitingChallenge.API.csproj" />
+    <ProjectReference Include="..\RecruitingChallenge.Tests.Utilities\RecruitingChallenge.Tests.Utilities.csproj" />
   </ItemGroup>
 
 </Project>

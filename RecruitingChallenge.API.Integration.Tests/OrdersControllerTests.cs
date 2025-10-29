@@ -1,4 +1,12 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.Extensions.DependencyInjection;
+using NUnit.Framework;
+using RecruitingChallenge.API.DTOs.Order;
+using RecruitingChallenge.Common.Extensions;
+using RecruitingChallenge.DAL;
+using RecruitingChallenge.DAL.Entities;
+using RecruitingChallenge.DAL.Migrations;
+using RecruitingChallenge.Domain.Models;
+using RecruitingChallenge.Tests.Utilities.Builders.Entities;
 using System.Text;
 using System.Text.Json;
 
@@ -16,39 +24,66 @@ namespace RecruitingChallenge.API.Integration.Tests
         }
 
         [Test]
-        public async Task GetOrderById()
+        public async Task GetOrderById_HappyPath()
         {
-            var loginRequest = new
-            {
-                UserName = "leandrof",
-                Password = "lean1234"
-            };
+            // Arrange
+            Guid clientId = Guid.NewGuid();
 
-            var loginJson = JsonSerializer.Serialize(loginRequest);
-            var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
+            var clientEntity = new TestsClientEntityBuilder()
+                .WithEmail("email@gmail.com")
+                .WithId(clientId)
+                .Build();
 
-            var loginResponse = await _client.PostAsync("api/v1/authentication", loginContent);
-            loginResponse.EnsureSuccessStatusCode();
+            var productEntity = new TestProductEntityBuilder()
+                .WithId(Guid.NewGuid())
+                .WithUnitPrice(1.05m)
+                .WithDescription("Product A")
+                .WithEntryDate(new DateTime(2025 - 09 - 09))
+                .WithName("Product A")
+                .Build();
 
-            var loginResponseContent = await loginResponse.Content.ReadAsStringAsync();
-            var loginResult = JsonSerializer.Deserialize<LoginResponse>(loginResponseContent, new JsonSerializerOptions
+            var orderItemEntity = new TestOrderItemEntityBuilder()
+                .WithId(Guid.NewGuid())
+                .WithQuantity(1)
+                .WithProduct(productEntity)
+                .Build();
+
+            var orderEntity = new TestOrderEntityBuilder()
+                .WithId(1)
+                .WithClient(clientEntity)
+                .WithEntryDate(new DateTime(2025, 10, 15))
+                .WithOrderItems(orderItemEntity)
+                .WithTotalAmount(10)
+                .Build();
+
+            await AddToDateBase(orderEntity);
+
+            var httpClient = await AuthenticateAsync();
+
+            // Act
+            var response = await httpClient.GetAsync($"api/v1/orders/{orderEntity.Id}");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var orderResponse = JsonSerializer.Deserialize<GetOrderResponse>(responseContent, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
-            _client.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginResult.Token);
-
-            // Act
-            var response = await _client.GetAsync($"api/v1/orders/{1}");
-
-            // Assert
-            response.EnsureSuccessStatusCode();
-        }
-
-        private class LoginResponse
-        {
-            public string Token { get; set; }
+            Assert.That(orderResponse.Id, Is.EqualTo(orderEntity.Id));
+            Assert.That(orderResponse.TotalAmount, Is.EqualTo(orderEntity.TotalAmount));
+            Assert.That(orderResponse.ClientEmail, Is.EqualTo(orderEntity.Client.Email));
+            
+            // Verify order items
+            Assert.That(orderResponse.Items, Is.Not.Null);
+            Assert.That(orderResponse.Items.Count, Is.EqualTo(1));
+            
+            var orderItem = orderResponse.Items.First();
+            Assert.That(orderItem.Quantity, Is.EqualTo(orderItemEntity.Quantity));
+            Assert.That(orderItem.ProductName, Is.EqualTo(orderItemEntity.Product.Name));
+            Assert.That(orderItem.UnitPrice, Is.EqualTo(orderItemEntity.Product.UnitPrice));
         }
     }
 }
