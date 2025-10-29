@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using RecruitingChallenge.API.Helpers;
 using RecruitingChallenge.API.Middlewares;
+using RecruitingChallenge.Common.Helpers;
 using RecruitingChallenge.DAL;
 using RecruitingChallenge.DAL.Repositories.Order;
 using RecruitingChallenge.DAL.Repositories.User;
@@ -96,6 +97,9 @@ builder.Services.AddSwaggerGen(option =>
 });
 
 var app = builder.Build();
+
+Environment.SetEnvironmentVariable("Environment", builder.Configuration["Environment"]);
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<OrderNowDbContext>();
