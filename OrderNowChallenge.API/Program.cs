@@ -65,6 +65,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddSingleton(mapper);
 
+builder.Services.AddHttpContextAccessor();
+
 // Only register SQL Server if not in testing environment
 if (!builder.Environment.EnvironmentName.Equals("IntegrationTests", StringComparison.OrdinalIgnoreCase))
 {

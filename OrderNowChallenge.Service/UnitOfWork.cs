@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Storage;
 using OrderNowChallenge.DAL;
 using OrderNowChallenge.Domain.Models;
 
@@ -17,14 +18,26 @@ namespace OrderNowChallenge.Service
     {
         private readonly OrderNowDbContext _dbContext;
         private IDbContextTransaction _currentTransaction;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UnitOfWork(OrderNowDbContext dbContext)
+        public UnitOfWork(
+            OrderNowDbContext dbContext,
+            IHttpContextAccessor httpContextAccessor)
         {
             _dbContext = dbContext;
+            _httpContextAccessor = httpContextAccessor;
         }
         
         public OrderNowDbContext DbContext => _dbContext;
-        public User CurrentUser => throw new NotImplementedException();
+
+        public User CurrentUser
+        {
+            get
+            {
+                var user = _httpContextAccessor.HttpContext?.Items["User"] as User;
+                return user;
+            }
+        }
 
         public async Task BeginTransaction()
         {
