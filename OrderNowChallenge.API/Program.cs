@@ -7,8 +7,10 @@ using OrderNowChallenge.API.Middlewares;
 using OrderNowChallenge.Common.Helpers;
 using OrderNowChallenge.DAL;
 using OrderNowChallenge.DAL.Repositories.Order;
+using OrderNowChallenge.DAL.Repositories.OrderItem;
 using OrderNowChallenge.DAL.Repositories.User;
 using OrderNowChallenge.Mapper;
+using OrderNowChallenge.Service;
 using OrderNowChallenge.Service.Orders;
 using OrderNowChallenge.Service.Users;
 using System.Text.Json.Serialization;
@@ -57,7 +59,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
 builder.Services.AddScoped<JwtHelper, JwtHelper>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddSingleton(mapper);
 

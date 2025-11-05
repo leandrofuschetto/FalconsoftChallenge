@@ -46,10 +46,10 @@ namespace OrderNowChallenge.DAL.Repositories.Order
 
                 if (filters.LastCursorId.HasValue && !string.IsNullOrWhiteSpace(filters.LastCursorValue))
                     query = ApplyKeyset(
-                        query, 
-                        filters.SortBy ?? ESortOrderByProperty.Id, 
-                        filters.Orientation ?? ESortOrientation.Asc, 
-                        filters.LastCursorValue, 
+                        query,
+                        filters.SortBy ?? ESortOrderByProperty.Id,
+                        filters.Orientation ?? ESortOrientation.Asc,
+                        filters.LastCursorValue,
                         filters.LastCursorId ?? 0);
 
                 var items = await query
@@ -57,7 +57,7 @@ namespace OrderNowChallenge.DAL.Repositories.Order
                     .ToListAsync();
 
                 bool hasNextPage = items.Count > PageSize;
-                
+
                 if (hasNextPage)
                     items.RemoveAt(items.Count - 1);
 
@@ -153,57 +153,40 @@ namespace OrderNowChallenge.DAL.Repositories.Order
         {
             try
             {
-                await _dbContext.Database.BeginTransactionAsync();
-
                 var order = await _dbContext.Orders
+                    .AsTracking()
                     .FirstOrDefaultAsync(o => o.Id == orderId);
 
                 order.Status = status;
-
-                _dbContext.Orders.Update(order);
-
-                await _dbContext.SaveChangesAsync();
-                await _dbContext.Database.CommitTransactionAsync();
             }
-            catch 
+            catch (InvalidOperationException ex)
             {
-                await _dbContext.Database.RollbackTransactionAsync();
-                throw;
+                _logger.LogError(
+                    ex,
+                    $"An error ocurrs when getting all orders. At {CLASS_NAME}, GetOrders");
+
+                throw new DataBaseContextException(
+                    ex.Message,
+                    ex);
             }
-            
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    $"Timeout occurs when getting all orders. At {CLASS_NAME}, GetOrders");
+
+                throw new DataBaseContextException(
+                    ex.Message,
+                    ex);
+            }
         }
 
-		public async Task UpdateOrderItemQuantity(int orderId, Guid itemId, int quantity)
-		{
-            try
-            {
-                await _dbContext.Database.BeginTransactionAsync();
+        public async Task UpdateTotalAmount(int orderId, decimal totalAmount)
+        {
+            var order = await _dbContext.Orders.AsTracking().FirstOrDefaultAsync(m => m.Id == orderId);
 
-                var order = await _dbContext.Orders
-                    .AsTracking()
-                    .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                    .FirstOrDefaultAsync(o => o.Id == orderId);
-
-                var item = order.OrderItems.FirstOrDefault(oi => oi.Id == itemId);
-
-                item.Quantity = quantity;
-
-                order.TotalAmount = order.OrderItems
-                    .Sum(oi => oi.Quantity * oi.Product.UnitPrice);
-
-                _dbContext.Orders.Update(order);
-
-                await _dbContext.SaveChangesAsync();
-                await _dbContext.Database.CommitTransactionAsync();
-            }
-            catch (Exception)
-            {
-                await _dbContext.Database.RollbackTransactionAsync();
-                throw;
-            }
-			
-		}
+            order.TotalAmount = totalAmount;
+        }
 
         private IQueryable<OrderEntity> ApplySorting(IQueryable<OrderEntity> query, OrderFilters filters)
         {
@@ -234,10 +217,10 @@ namespace OrderNowChallenge.DAL.Repositories.Order
         }
 
         private IQueryable<OrderEntity> ApplyKeyset(
-            IQueryable<OrderEntity> query, 
-            ESortOrderByProperty sortByProperty, 
-            ESortOrientation orientation, 
-            string lastValue, 
+            IQueryable<OrderEntity> query,
+            ESortOrderByProperty sortByProperty,
+            ESortOrientation orientation,
+            string lastValue,
             int lastId)
         {
             return sortByProperty switch
@@ -252,9 +235,9 @@ namespace OrderNowChallenge.DAL.Repositories.Order
         }
 
         private IQueryable<OrderEntity> ApplyKeysetPaginationById(
-            IQueryable<OrderEntity> query, 
-            int lastId, 
-            int lastValue, 
+            IQueryable<OrderEntity> query,
+            int lastId,
+            int lastValue,
             ESortOrientation orientation)
         {
             return orientation == ESortOrientation.Asc
@@ -274,14 +257,14 @@ namespace OrderNowChallenge.DAL.Repositories.Order
         }
 
         private IQueryable<OrderEntity> ApplyKeysetPaginationByTotalAmount(
-            IQueryable<OrderEntity> query, 
-            int lastId, 
-            decimal lastValue, 
+            IQueryable<OrderEntity> query,
+            int lastId,
+            decimal lastValue,
             ESortOrientation orientation)
         {
             return orientation == ESortOrientation.Asc
                 ? query.Where(x => x.TotalAmount > lastValue || (x.TotalAmount == lastValue && x.Id > lastId))
-                : query.Where(x => x.TotalAmount < lastValue || (x.TotalAmount  == lastValue && x.Id < lastId));
+                : query.Where(x => x.TotalAmount < lastValue || (x.TotalAmount == lastValue && x.Id < lastId));
         }
 
         private IQueryable<OrderEntity> ApplyKeysetPaginationByStatus(
@@ -290,15 +273,15 @@ namespace OrderNowChallenge.DAL.Repositories.Order
             EOrderStatus lastValue,
             ESortOrientation orientation)
         {
-            return orientation == ESortOrientation.Asc  
+            return orientation == ESortOrientation.Asc
                 ? query.Where(x => x.Status > lastValue || (x.Status == lastValue && x.Id > lastId))
                 : query.Where(x => x.Status < lastValue || (x.Status == lastValue && x.Id < lastId));
         }
 
         private IQueryable<OrderEntity> ApplyKeysetPaginationByClientEmail(
-            IQueryable<OrderEntity> query, 
-            int lastId, 
-            string lastValue, 
+            IQueryable<OrderEntity> query,
+            int lastId,
+            string lastValue,
             ESortOrientation orientation)
         {
             return orientation == ESortOrientation.Asc

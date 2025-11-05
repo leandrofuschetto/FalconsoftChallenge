@@ -15,7 +15,9 @@ namespace OrderNowChallenge.Mapper
                 .ForMember(d => d.OrderItems, op => op.MapFrom(src => src.OrderItems));
 
             CreateMap<Order, OrderEntity>()
-                .ForMember(d => d.Client, op => op.MapFrom(src => src.Client));
+                .ForMember(d => d.ClientId, op => op.MapFrom(src => src.Client.Id))
+                .ForMember(d => d.Client, op => op.Ignore())
+                .ForMember(d => d.OrderItems, op => op.Ignore());
 
             CreateMap<OrderItemEntity, OrderItem>()
                 .ForMember(d => d.ProductName, op => op.MapFrom(src => src.Product.Name))
